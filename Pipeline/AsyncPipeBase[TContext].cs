@@ -9,6 +9,7 @@ namespace NWrath.Synergy.Pipeline
 
         public IAsyncPipe<TContext> Next { get => _next; set { _next = value ?? Stub; } }
 
+        private static Task _completedTask = Task.FromResult(0);
         private IAsyncPipe<TContext> _next = Stub;
 
         public abstract Task Perform(TContext context);
@@ -26,7 +27,7 @@ namespace NWrath.Synergy.Pipeline
 
             public Task Perform(TContext context)
             {
-                return Task.CompletedTask;
+                return _completedTask;
             }
         }
     }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NWrath.Synergy.Pipeline
 {
@@ -17,6 +18,16 @@ namespace NWrath.Synergy.Pipeline
 
         private List<IPipe<TContext>> _pipes = new List<IPipe<TContext>>();
         private Lazy<IPipe<TContext>> _pipeline;
+
+        public PipeCollection(params Action<TContext, Action<TContext>>[] pipes)
+        {
+            AddRange(pipes);
+        }
+
+        public PipeCollection(IEnumerable<IPipe<TContext>> pipes)
+        {
+            AddRange(pipes.ToArray());
+        }
 
         public void Clear()
         {

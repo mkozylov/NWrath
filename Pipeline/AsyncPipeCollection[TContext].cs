@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace NWrath.Synergy.Pipeline
@@ -18,6 +19,16 @@ namespace NWrath.Synergy.Pipeline
 
         private List<IAsyncPipe<TContext>> _pipes = new List<IAsyncPipe<TContext>>();
         private Lazy<IAsyncPipe<TContext>> _pipeline;
+
+        public AsyncPipeCollection(params Func<TContext, Func<TContext, Task>, Task>[] collection)
+        {
+            AddRange(collection);
+        }
+
+        public AsyncPipeCollection(IEnumerable<IAsyncPipe<TContext>> collection)
+        {
+            AddRange(collection.ToArray());
+        }
 
         public void Clear()
         {
