@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net452</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Kozylov Mikhail</Authors>
     <Company>-</Company>
@@ -30,8 +30,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Common\Structs\Ref[TValue].cs" />
     <Compile Remove="InjectorExtensions.cs" />
     <Compile Remove="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FastExpressionCompiler" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

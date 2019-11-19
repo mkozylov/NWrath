@@ -6,8 +6,6 @@ namespace NWrath.Synergy.Common.Structs
     public class Set
         : Dictionary<string, object>
     {
-        public static Set Empty { get { return new Set(StringComparer.OrdinalIgnoreCase); } }
-
         public Set()
             : base(StringComparer.OrdinalIgnoreCase)
         {

@@ -2,7 +2,7 @@
 
 namespace NWrath.Synergy.Expressions.Extensions
 {
-    public static class CommonExpressionExtensions
+    public static partial class CommonExpressionExtensions
     {
         public static Expression AndCoalesce(this Expression left, Expression right)
         {

@@ -40,38 +40,6 @@ namespace NWrath.Synergy.Common.Extensions
 
         #endregion Strings
 
-        #region Required
-
-        public static TSource Required<TSource>(
-            this TSource obj,
-            Func<Exception> throwEx
-            )
-            where TSource : class
-        {
-            if (obj == null)
-            {
-                throw throwEx();
-            }
-
-            return obj;
-        }
-
-        public static TSource Required<TSource>(
-           this TSource obj,
-           Func<TSource, bool> predicate,
-           Func<Exception> throwEx
-           )
-        {
-            if (!predicate(obj))
-            {
-                throw throwEx();
-            }
-
-            return obj;
-        }
-
-        #endregion Required
-
         #region Transform
 
         public static TResult Extract<TSource, TResult>(this TSource obj, Func<TSource, TResult> extract)

@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace NWrath.Synergy.Reflection.Extensions
 {
-    public static class CommonReflectionExtensions
+    public static partial class CommonReflectionExtensions
     {
         public static MemberInfo[] GetPublicMembers(this Type type)
         {

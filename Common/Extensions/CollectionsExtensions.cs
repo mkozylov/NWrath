@@ -1,115 +1,151 @@
-﻿using System;
+﻿using NWrath.Synergy.Common.Structs;
+using NWrath.Synergy.Reflection.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace NWrath.Synergy.Common.Extensions.Collections
 {
     public static class CollectionsExtensions
     {
-        #region Dictionary
+        public static Func<StringSet, string> DefaultStringSetJsonSerializer { get; set; } = GetDefaultStringSetJsonSerializer;
 
-        public static TValue TryGet<TKey, TValue>(this Dictionary<TKey, TValue> store, TKey key)
+        #region Set
+
+        public static StringSet ToStringSet<TSource>(this TSource source)
         {
-            return store.ContainsKey(key)
-                ? store[key]
+            switch (source)
+            {
+                case StringSet stringSet:
+                    return stringSet;
+                case IDictionary<string, string> stringDictionary:
+                    return new StringSet(stringDictionary);
+                case IDictionary<string, object> objDictionary:
+                    var dictionary = objDictionary.ToDictionary(k => k.Key, v => v.Value?.ToString());
+                    return new StringSet();
+                default:
+                    dictionary = PropertyCache<TSource>.ToStringDictionary(source);
+                    return new StringSet(dictionary);
+            }
+        }
+
+        public static string AsJson(this StringSet set, Func<StringSet, string> serializerFunc = null)
+        {
+            if (serializerFunc != null)
+            {
+                return serializerFunc(set);
+            }
+
+            return DefaultStringSetJsonSerializer(set);
+        }
+
+        #endregion
+
+        #region IDictionary
+
+        public static TValue TryGet<TKey, TValue>(this IDictionary<TKey, TValue> set, TKey key)
+        {
+            return set.ContainsKey(key)
+                ? set[key]
                 : default(TValue);
         }
 
-        public static TValue TryGet<TKey, TValue>(this Dictionary<TKey, TValue> store, TKey key, TValue defaultValue)
+        public static TValue TryGet<TKey, TValue>(this IDictionary<TKey, TValue> set, TKey key, TValue defaultValue)
         {
-            return store.ContainsKey(key)
-                ? store[key]
+            return set.ContainsKey(key)
+                ? set[key]
                 : defaultValue;
         }
 
         public static TValue AddOrUpdate<TKey, TValue>(
-            this Dictionary<TKey, TValue> store,
+            this IDictionary<TKey, TValue> set,
             TKey key,
             TValue value,
             Func<TKey, TValue, TValue> updateValueFactory
             )
         {
-            if (!store.ContainsKey(key))
+            if (!set.ContainsKey(key))
             {
-                store.Add(key, value);
+                set.Add(key, value);
 
                 return value;
             }
 
-            var updated = updateValueFactory(key, store[key]);
+            var updated = updateValueFactory(key, set[key]);
 
-            store[key] = updated;
+            set[key] = updated;
 
             return updated;
         }
 
         public static TValue GetOrAdd<TKey, TValue>(
-            this Dictionary<TKey, TValue> store,
+            this IDictionary<TKey, TValue> set,
             TKey key,
             Func<TKey, TValue> valueFactory
             )
         {
-            if (!store.ContainsKey(key))
+            if (!set.ContainsKey(key))
             {
                 var value = valueFactory(key);
 
-                store.Add(key, value);
+                set.Add(key, value);
 
                 return value;
             }
 
-            return store[key];
+            return set[key];
         }
 
-        public static T GetOrAdd<T>(this Dictionary<string, object> store, string key, Func<string, T> valueFactory)
+        public static TValue GetOrAdd<TValue>(this IDictionary<string, object> set, string key, Func<string, TValue> valueFactory)
         {
-            if (!store.ContainsKey(key))
+            if (!set.ContainsKey(key))
             {
                 var value = valueFactory(key);
 
-                store.Add(key, value);
+                set.Add(key, value);
 
                 return value;
             }
 
-            return (T)store[key];
+            return (TValue)set[key];
         }
 
-        public static T TryGet<T>(this Dictionary<string, object> store, string key)
+        public static TValue TryGet<TValue>(this IDictionary<string, object> set, string key)
         {
-            return (T)store.TryGet(key);
+            return (TValue)set.TryGet(key);
         }
 
-        public static T TryGet<T>(this Dictionary<string, object> store)
+        public static TValue TryGet<TValue>(this IDictionary<string, object> set)
         {
-            return (T)store.TryGet(typeof(T).Name);
+            return (TValue)set.TryGet(typeof(TValue).Name);
         }
 
-        public static T TryGet<T>(this Dictionary<string, object> store, string key, T defaultValue)
+        public static TValue TryGet<TValue>(this IDictionary<string, object> set, string key, TValue defaultValue)
         {
-            return store.ContainsKey(key)
-                ? (T)store[key]
+            return set.ContainsKey(key)
+                ? (TValue)set[key]
                 : defaultValue;
         }
 
-        public static T TryGet<T>(this Dictionary<string, object> store, string key, Func<string, T> defaultValueFactory)
+        public static TValue TryGet<TValue>(this IDictionary<string, object> set, string key, Func<string, TValue> defaultValueFactory)
         {
-            return store.ContainsKey(key)
-                ? (T)store[key]
+            return set.ContainsKey(key)
+                ? (TValue)set[key]
                 : defaultValueFactory(key);
         }
 
-        public static void Add<T>(this Dictionary<string, object> store, string key, T val)
+        public static void Add<TValue>(this IDictionary<string, object> set, string key, TValue val)
         {
-            store[key] = val;
+            set[key] = val;
         }
 
-        public static void Add<T>(this Dictionary<string, object> store, T val)
+        public static void Add<TValue>(this IDictionary<string, object> set, TValue val)
         {
-            store[typeof(T).Name] = val;
+            set[typeof(TValue).Name] = val;
         }
 
-        #endregion Dictionary
+        #endregion IDictionary
 
         #region Empty
 
@@ -192,5 +228,31 @@ namespace NWrath.Synergy.Common.Extensions.Collections
         }
 
         #endregion Each
+
+        #region Internal
+        private static string GetDefaultStringSetJsonSerializer(IDictionary<string, string> set)
+        {
+            return $"{{ {set.Select(x => $"\"{x.Key}\":\"{x.Value}\"").StringJoin(", ") } }}";
+        }
+
+        private static class PropertyCache<TSource>
+        {
+            private static PropertyInfo[] _members;
+
+            static PropertyCache()
+            {
+                _members = typeof(TSource).GetProperties();
+            }
+
+            public static Dictionary<string, string> ToStringDictionary(TSource obj)
+            {
+                return _members.ToDictionary(
+                    k => k.Name,
+                    v => v.GetValue(obj) + ""
+                    );
+            }
+        }
+
+        #endregion
     }
 }

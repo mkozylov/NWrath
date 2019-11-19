@@ -12,7 +12,7 @@ namespace NWrath.Synergy.Common.Structs
 
         public virtual Func<TPredicate, TArgs, TInstance> Produce { get; set; }
 
-        public virtual Set Store { get; set; } = Set.Empty;
+        public virtual Set Store { get; set; } = new Set();
 
         public FactoryUnit()
         {

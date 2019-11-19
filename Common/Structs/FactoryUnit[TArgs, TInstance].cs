@@ -9,7 +9,7 @@ namespace NWrath.Synergy.Common.Structs
 
         public virtual Func<TArgs, TInstance> Produce { get; set; }
 
-        public virtual Set Store { get; set; } = Set.Empty;
+        public virtual Set Store { get; set; } = new Set();
 
         public FactoryUnit()
         {
