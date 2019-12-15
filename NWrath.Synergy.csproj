@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net452</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.0;net452</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Kozylov Mikhail</Authors>
     <Company>-</Company>
@@ -10,7 +10,7 @@
     <Description>Simple set of tools and extensions</Description>
     <PackageProjectUrl>https://github.com/mkozylov/NWrath.Synergy/wiki</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/mkozylov/NWrath.Synergy/blob/master/LICENSE</PackageLicenseUrl>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
