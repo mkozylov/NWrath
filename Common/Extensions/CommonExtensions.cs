@@ -1,6 +1,8 @@
-﻿using System;
+﻿using NWrath.Synergy.Common.Structs;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NWrath.Synergy.Common.Extensions
 {
@@ -36,6 +38,11 @@ namespace NWrath.Synergy.Common.Extensions
         public static string StringJoin(this IEnumerable<string> collection, string separator = ",")
         {
             return string.Join(separator, collection);
+        }
+
+        public static bool IgnoreCaseEquals(this string obj1, string obj2)
+        {
+            return string.Equals(obj1, obj2, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion Strings
@@ -104,8 +111,7 @@ namespace NWrath.Synergy.Common.Extensions
             this TSource obj,
             TSource expected,
             Func<TSource, TResult> then,
-            Func<TSource, TResult> otherwise = null,
-            TResult defaultValue = default(TResult)
+            Func<TSource, TResult> otherwise
             )
         {
             if (EqualityComparer<TSource>.Default.Equals(obj, expected))
@@ -113,11 +119,24 @@ namespace NWrath.Synergy.Common.Extensions
                 return then(obj);
             }
 
-            var result = otherwise == null
-                ? defaultValue
-                : otherwise(obj);
+            var result = otherwise(obj);
 
             return result;
+        }
+
+        public static TResult If<TSource, TResult>(
+            this TSource obj,
+            TSource expected,
+            Func<TSource, TResult> then,
+            TResult otherwiseResult
+            )
+        {
+            if (EqualityComparer<TSource>.Default.Equals(obj, expected))
+            {
+                return then(obj);
+            }
+
+            return otherwiseResult;
         }
 
         public static TSource If<TSource>(
@@ -143,8 +162,7 @@ namespace NWrath.Synergy.Common.Extensions
             this TSource obj,
             Func<TSource, bool> condition,
             Func<TSource, TResult> then,
-            Func<TSource, TResult> otherwise = null,
-            TResult defaultValue = default(TResult)
+            Func<TSource, TResult> otherwise
             )
         {
             if (condition(obj))
@@ -152,13 +170,62 @@ namespace NWrath.Synergy.Common.Extensions
                 return then(obj);
             }
 
-            var result = otherwise == null
-                ? defaultValue
-                : otherwise(obj);
+            var result = otherwise(obj);
 
             return result;
         }
 
+        public static TResult If<TSource, TResult>(
+            this TSource obj,
+            Func<TSource, bool> condition,
+            Func<TSource, TResult> then,
+            TResult otherwiseResult
+            )
+        {
+            if (condition(obj))
+            {
+                return then(obj);
+            }
+
+            return otherwiseResult;
+        }
+
         #endregion If
+
+        #region Invocation
+
+        public static async Task<InvokeResult<TResult>> TryInvokeAsync<TResult>(this Task<TResult> task)
+        {
+            var result = new InvokeResult<TResult>();
+
+            try
+            {
+                result.Value = await task;
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex;
+            }
+
+            return result;
+        }
+
+        public static async Task<InvokeResult> TryInvokeAsync(this Task task)
+        {
+            var result = new InvokeResult();
+
+            try
+            {
+                await task;
+            }
+            catch (Exception ex)
+            {
+                result.Error = ex;
+            }
+
+            return result;
+        } 
+
+        #endregion
     }
 }

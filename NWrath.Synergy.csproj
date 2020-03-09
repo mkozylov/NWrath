@@ -9,8 +9,8 @@
     <RepositoryUrl>https://github.com/mkozylov/NWrath.Synergy</RepositoryUrl>
     <Description>Simple set of tools and extensions</Description>
     <PackageProjectUrl>https://github.com/mkozylov/NWrath.Synergy/wiki</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/mkozylov/NWrath.Synergy/blob/master/LICENSE</PackageLicenseUrl>
-    <Version>1.0.4</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.0.5</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

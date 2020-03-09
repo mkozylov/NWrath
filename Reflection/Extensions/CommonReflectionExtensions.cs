@@ -1,5 +1,7 @@
 ﻿using NWrath.Synergy.Common.Extensions;
+using NWrath.Synergy.Comparison.Comparers;
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -7,6 +9,15 @@ namespace NWrath.Synergy.Reflection.Extensions
 {
     public static partial class CommonReflectionExtensions
     {
+        public static string GetAssemblyDirectory(this Type type)
+        {
+            var codeBase = type.Assembly.CodeBase;
+            var uri = new UriBuilder(codeBase);
+            var path = Uri.UnescapeDataString(uri.Path);
+
+            return Path.GetDirectoryName(path);
+        }
+
         public static MemberInfo[] GetPublicMembers(this Type type)
         {
             var bindingFlags = BindingFlags.Public | BindingFlags.Instance;
@@ -42,7 +53,12 @@ namespace NWrath.Synergy.Reflection.Extensions
             }
         }
 
-        public static object CallGenericMethod<TObj>(this TObj instance, string methodName, Type[] genericParamTypes, params object[] args)
+        public static object CallGenericMethod<TObj>(
+            this TObj instance, 
+            string methodName, 
+            Type[] genericParamTypes, 
+            params object[] args
+            )
             where TObj : class
         {
             return instance.GetType()
@@ -53,13 +69,23 @@ namespace NWrath.Synergy.Reflection.Extensions
                            .Invoke(instance, args);
         }
 
-        public static object CallStaticGenericMethod<TObj>(this TObj instance, string methodName, Type[] genericParamTypes, params object[] args)
+        public static object CallStaticGenericMethod<TObj>(
+            this TObj instance, 
+            string methodName, 
+            Type[] genericParamTypes, 
+            params object[] args
+            )
         {
             return instance.GetType()
                            .CallStaticGenericMethod(methodName, genericParamTypes, args);
         }
 
-        public static object CallStaticGenericMethod(this Type type, string methodName, Type[] genericParamTypes, params object[] args)
+        public static object CallStaticGenericMethod(
+            this Type type, 
+            string methodName, 
+            Type[] genericParamTypes, 
+            params object[] args
+            )
         {
             return type.GetTypeInfo()
                        .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
@@ -73,16 +99,39 @@ namespace NWrath.Synergy.Reflection.Extensions
         public static MethodInfo GetStaticGenericMethod(
             this Type type,
             string methodName,
-            int genericParamCount,
-            int argsCount
+            Type[] genericParamTypes,
+            Type[] argsTypes = null
             )
         {
             return type.GetTypeInfo()
                        .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
                        .First(x => x.Name == methodName
+                           && x.IsGenericMethod
+                           && x.GetGenericArguments()
+                               .SequenceEqual(genericParamTypes, new TypeEqualityComparer())
+                           && argsTypes == null
+                               || x.GetParameters().Select(p => p.ParameterType)
+                                   .SequenceEqual(argsTypes, new TypeEqualityComparer())
+                           );
+        }
+
+        public static MethodInfo GetGenericMethod(
+            this Type type,
+            string methodName,
+            Type[] genericParamTypes,
+            Type[] argsTypes = null
+            )
+        {
+            return type.GetTypeInfo()
+                       .GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
+                       .First(x => x.Name == methodName
                                 && x.IsGenericMethod
-                                && x.GetGenericArguments().Length == genericParamCount
-                                && x.GetParameters().Length == argsCount);
+                                && x.GetGenericArguments()
+                                    .SequenceEqual(genericParamTypes, new TypeEqualityComparer())
+                                && argsTypes == null 
+                                   || x.GetParameters().Select(p => p.ParameterType)
+                                       .SequenceEqual(argsTypes, new TypeEqualityComparer())
+                                );
         }
     }
 }

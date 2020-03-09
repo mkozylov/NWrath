@@ -1,8 +1,10 @@
 ﻿using NWrath.Synergy.Common.Structs;
 using NWrath.Synergy.Reflection.Extensions;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace NWrath.Synergy.Common.Extensions.Collections
@@ -11,21 +13,67 @@ namespace NWrath.Synergy.Common.Extensions.Collections
     {
         public static Func<StringSet, string> DefaultStringSetJsonSerializer { get; set; } = GetDefaultStringSetJsonSerializer;
 
+        private static ConcurrentDictionary<Type, Func<object, Dictionary<string, object>>> _dictionaryFactories = CreateDictionary<object>();
+        private static ConcurrentDictionary<Type, Func<object, Dictionary<string, string>>> _stringDictionaryFactories = CreateDictionary<string>();
+
         #region Set
+
+        public static Set ToSet(this object source)
+        {
+            if (source == null)
+            {
+                return new Set(new Dictionary<string, object>());
+            }
+
+            switch (source)
+            {
+                case Set set:
+                    return set;
+                case IDictionary<string, object> objDictionary:
+                    return new Set(objDictionary);
+                default:
+                    var factory = _dictionaryFactories.GetOrAdd(source.GetType(), t => {
+                        return typeof(PropertyCache<>)
+                                  .MakeGenericType(source.GetType())
+                                  .GetMethod(nameof(PropertyCache<object>.ToObjectDictionary), BindingFlags.Public | BindingFlags.Static)
+                                  .CreateDelegate(
+                                      Expression.GetFuncType(typeof(object), typeof(Dictionary<string, object>))
+                                      )
+                                  .CastTo<Func<object, Dictionary<string, object>>>();
+                    });
+
+                    var dictionary = factory(source);
+
+                    return new Set(dictionary);
+            }
+        }
 
         public static StringSet ToStringSet<TSource>(this TSource source)
         {
+            if (source == null)
+            {
+                return new StringSet(new Dictionary<string, string>());
+            }
+
             switch (source)
             {
-                case StringSet stringSet:
-                    return stringSet;
+                case StringSet set:
+                    return set;
                 case IDictionary<string, string> stringDictionary:
                     return new StringSet(stringDictionary);
-                case IDictionary<string, object> objDictionary:
-                    var dictionary = objDictionary.ToDictionary(k => k.Key, v => v.Value?.ToString());
-                    return new StringSet();
                 default:
-                    dictionary = PropertyCache<TSource>.ToStringDictionary(source);
+                    var factory = _stringDictionaryFactories.GetOrAdd(source.GetType(), t => {
+                        return typeof(PropertyCache<>)
+                                  .MakeGenericType(source.GetType())
+                                  .GetMethod(nameof(PropertyCache<object>.ToObjectDictionary), BindingFlags.Public | BindingFlags.Static)
+                                  .CreateDelegate(
+                                      Expression.GetFuncType(typeof(object), typeof(Dictionary<string, string>))
+                                      )
+                                  .CastTo<Func<object, Dictionary<string, string>>>();
+                    });
+
+                    var dictionary = factory(source);
+
                     return new StringSet(dictionary);
             }
         }
@@ -230,6 +278,11 @@ namespace NWrath.Synergy.Common.Extensions.Collections
         #endregion Each
 
         #region Internal
+        private static ConcurrentDictionary<Type, Func<object, Dictionary<string, TValue>>> CreateDictionary<TValue>()
+        {
+            return new ConcurrentDictionary<Type, Func<object, Dictionary<string, TValue>>>();
+        }
+
         private static string GetDefaultStringSetJsonSerializer(IDictionary<string, string> set)
         {
             return $"{{ {set.Select(x => $"\"{x.Key}\":\"{x.Value}\"").StringJoin(", ") } }}";
@@ -251,8 +304,15 @@ namespace NWrath.Synergy.Common.Extensions.Collections
                     v => v.GetValue(obj) + ""
                     );
             }
-        }
 
+            public static Dictionary<string, object> ToObjectDictionary(TSource obj)
+            {
+                return _members.ToDictionary(
+                    k => k.Name,
+                    v => v.GetValue(obj)
+                    );
+            }
+        }
         #endregion
     }
 }
