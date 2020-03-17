@@ -65,7 +65,7 @@ namespace NWrath.Synergy.Common.Extensions.Collections
                     var factory = _stringDictionaryFactories.GetOrAdd(source.GetType(), t => {
                         return typeof(PropertyCache<>)
                                   .MakeGenericType(source.GetType())
-                                  .GetMethod(nameof(PropertyCache<object>.ToObjectDictionary), BindingFlags.Public | BindingFlags.Static)
+                                  .GetMethod(nameof(PropertyCache<object>.ToStringDictionary), BindingFlags.Public | BindingFlags.Static)
                                   .CreateDelegate(
                                       Expression.GetFuncType(typeof(object), typeof(Dictionary<string, string>))
                                       )
@@ -297,7 +297,7 @@ namespace NWrath.Synergy.Common.Extensions.Collections
                 _members = typeof(TSource).GetProperties();
             }
 
-            public static Dictionary<string, string> ToStringDictionary(TSource obj)
+            public static Dictionary<string, string> ToStringDictionary(object obj)
             {
                 return _members.ToDictionary(
                     k => k.Name,
@@ -305,7 +305,7 @@ namespace NWrath.Synergy.Common.Extensions.Collections
                     );
             }
 
-            public static Dictionary<string, object> ToObjectDictionary(TSource obj)
+            public static Dictionary<string, object> ToObjectDictionary(object obj)
             {
                 return _members.ToDictionary(
                     k => k.Name,
